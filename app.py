@@ -2,8 +2,10 @@ from flask import Flask, render_template, request
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 from flask import Flask ,request , jsonify
+from elasticsearch import Elasticsearch
 from werkzeug.middleware.profiler import ProfilerMiddleware
-
+import pickle
+import pandas as pd
 app=Flask(__name__)
 
 @app.route('/webhook', methods=['POST'])
@@ -79,6 +81,27 @@ def query_order_status_from_database(order_id):
         return status
     else:
         return None
+
+
+
+
+product_dict = pickle.load(open('product_dict.pkl','rb'))
+df=pd.DataFrame(product_dict)
+df.head()
+similarity = pickle.load(open('similarity.pkl','rb'))
+def recommend(product):
+    index = df[df['products'] == product].index[0]
+    distances = sorted(list(enumerate(similarity[index])),reverse=True,key = lambda x: x[1])
+    a=[]
+    for i in distances[1:6]:
+        a.append(df.iloc[i[0]].products)
+    return a
+
+@app.route("/recommend",methods=["POST"])
+def rec():
+    req=request.get_json()
+    product=req["product_name"]
+    return jsonify({"recommended list":recommend(product)})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0",port=int("3000"),debug=True)
