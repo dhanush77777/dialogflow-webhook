@@ -2,7 +2,6 @@ from flask import Flask, render_template, request
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 from flask import Flask ,request , jsonify
-from elasticsearch import Elasticsearch
 from werkzeug.middleware.profiler import ProfilerMiddleware
 import pickle
 import pandas as pd
