@@ -5,6 +5,7 @@ from flask import Flask ,request , jsonify
 from werkzeug.middleware.profiler import ProfilerMiddleware
 import pickle
 import pandas as pd
+import json
 app=Flask(__name__)
 
 @app.route('/webhook', methods=['POST'])
@@ -86,15 +87,20 @@ def query_order_status_from_database(order_id):
 
 product_dict = pickle.load(open('product_dict.pkl','rb'))
 df=pd.DataFrame(product_dict)
-df.head()
 similarity = pickle.load(open('similarity.pkl','rb'))
 def recommend(product):
     index = df[df['products'] == product].index[0]
     distances = sorted(list(enumerate(similarity[index])),reverse=True,key = lambda x: x[1])
-    a=[]
+    a,b=[],[]
     for i in distances[1:6]:
         a.append(df.iloc[i[0]].products)
-    return a
+        b.append(df.iloc[i[0]].product_id)
+    d = pd.DataFrame({'products': a, 'product_id': b})
+    data = d.to_dict(orient='records')
+
+    # Convert the data to JSON
+    json_data = json.dumps(data)
+    return json_data
 
 @app.route("/recommend",methods=["POST"])
 def rec():
